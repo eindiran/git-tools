@@ -21,7 +21,7 @@
 #===============================================================================
 set -Eeuo pipefail
 
-if [ "$#" -eq 1 ] && [ -d "$1" ]; then
+if [ "$#" -eq 1 ]; then
     git branch --sort=-committerdate | head -n "$1"
 elif [ "$#" -eq 0 ]; then
     git branch --sort=-committerdate | cat
