@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-conflicts
+#
+#         USAGE: git conflicts [-s | --show] <branch1> <branch2>
+#                git conflicts [-f | --files] <branch1> <branch2>
+#                git conflicts -h
+#
+#   DESCRIPTION: Compare two branches for possible merge conflicts.
+#                See git_conflict_parser.py for more info.
+#                Examples:
+#                   `git conflicts <branch1> <branch2>` -> Find whether branch1
+#                   and branch2 would have merge conflicts.
+#                   `git conflicts --show <branch1> <branch2>` -> Show the conflicts
+#                   between branch1 and branch2
+#                   `git conflicts -f <branch1> <branch2>` -> Show the filenames
+#                   between branch1 and branch2 that contain conflicts
+#
+#  REQUIREMENTS: git
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+usage() {
+    # Print usage info
+    cat <<EOF
+        USAGE: git conflicts [-s | --show] <branch1> <branch2>
+               git conflicts [-f | --files] <branch1> <branch2>
+               git conflicts -h
+
+  DESCRIPTION:
+               Compare two branches for possible merge conflicts.
+               See git_conflict_parser.py for more info.
+     EXAMPLES:
+               'git conflicts <branch1> <branch2>' ->
+                    Find whether branch1 and branch2 would have merge conflicts.
+               'git conflicts --show <branch1> <branch2>' ->
+                    Show the full list of conflicts between branch1 and branch2.
+               'git conflicts -f <branch1> <branch2>' ->
+                    Show the filenames between branch1 and branch2 that
+                    contain conflicts.
+EOF
+
+}
+
+create_tempfile() {
+    # Helper function for creating tempfiles
+    tempprefix=$(basename "$0")
+    mktemp "/tmp/${tempprefix}.XXXXXXXX"
+}
+
+SHOW_CONFLICTS_MODE=false
+FILENAME_MODE=false
+
+PARSED_ARGUMENTS=$(getopt -a -n git-conflicts -o sfh --long show,files,help -- "$@")
+VALID_PARSE=$?
+if [ "$VALID_PARSE" != 0 ]; then
+    # getopt failed to parse the args correctly
+    usage
+    exit 2
+fi
+eval set -- "$PARSED_ARGUMENTS"
+while :
+do
+    case "$1" in
+        -s | --show)
+            SHOW_CONFLICTS_MODE=true
+            shift
+            ;;
+        -f | --files)
+            FILENAME_MODE=true
+            shift
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            printf "Invalid option: %s\n" "$1"
+            usage
+            exit 2
+            ;;
+    esac
+done
+
+if [ "$#" -ne 2 ]; then
+    printf "Must specify exactly 2 branches names; %d specified instead\n" "$#"
+    usage
+    exit 2
+fi
+branch1="${1}"
+branch2="${2}"
+git_output_tempfile="$(create_tempfile)"
+trap 'rm -f "${git_output_tempfile}"' EXIT
+git merge-tree "$(git merge-base "${branch1}" "${branch2}")" "${branch1}" "${branch2}" > "${git_output_tempfile}"
+
+if $SHOW_CONFLICTS_MODE ; then
+    git_conflict_parser.py -f "${git_output_tempfile}"
+elif $FILENAME_MODE ; then
+    git_conflict_parser.py -f "${git_output_tempfile}" -c
+else
+    git_conflict_parser.py -f "${git_output_tempfile}" -e
+fi

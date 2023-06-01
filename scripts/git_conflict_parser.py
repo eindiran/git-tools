@@ -7,6 +7,7 @@ split up by file.
 '''
 import argparse
 import re
+import sys
 from typing import IO, List, Match, Optional, Pattern, Set
 
 
@@ -15,14 +16,17 @@ FILEPATH_REGEX: Pattern = re.compile(r'^\s+base\s+[0-9]+\s+[a-fA-F0-9]+\s+(.*?)$
 START_PATTERN: str = r'+<<<<<<< .our'
 END_PATTERN: str = r'+>>>>>>> .their'
 DEFAULT_ENCODING: str = 'utf8'
+EXIT_CODE_CONFLICT_FOUND: int = 128
+EXIT_CODE_NO_CONFLICT: int = 0
 
 
-def _output(output_file: Optional[IO], text: str, conflicting_files_only: bool=False) -> None:
+def _output(output_file: Optional[IO], text: str, conflicting_files_only: bool=False,
+            exit_only: bool=False) -> None:
     '''
     Output function -- will either write to a specified file object,
     or to stdout if the filename is None.
     '''
-    if not conflicting_files_only:
+    if not conflicting_files_only and not exit_only:
         output_file.write(text) if output_file else print(text, end='')
 
 
@@ -30,7 +34,8 @@ def conflict_parser(
         filename: str,
         output_file: Optional[str],
         encoding: str=DEFAULT_ENCODING,
-        conflicting_files_only: bool=False) -> None:
+        conflicting_files_only: bool=False,
+        exit_only: bool=False) -> None:
     '''
     Parse conflicts for the merge of two branches foo and bar
     out of the output of:
@@ -53,6 +58,8 @@ def conflict_parser(
             # Store the last filename
             last_diff_filename = ''.join(m.groups(0)) + '\n'
         elif line.startswith(START_PATTERN):
+            if exit_only:
+                sys.exit(EXIT_CODE_CONFLICT_FOUND)
             currently_matching = True
             try:
                 # Write out the last filename we stored
@@ -110,16 +117,31 @@ def main():
         required=False,
         help='Optional filename to write the resulting conflict diff to. Default: STDOUT'
     )
-    parser.add_argument(
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument(
         '-c',
         '--conflicts_only',
         dest='conflicts_only',
         action='store_true',
-        required=False,
         help='Display files with conflicts only, rather than conflict text. Default: False'
     )
+    mode_group.add_argument(
+        '-e',
+        '--exit_only',
+        dest='exit_only',
+        action='store_true',
+        help='Immediately exit with 128 if a conflict is found, ' +
+        'exiting with 0 otherwise. Default: False'
+    )
     args = parser.parse_args()
-    conflict_parser(args.filename, args.output_file, args.encoding, args.conflicts_only)
+    conflict_parser(
+        args.filename,
+        args.output_file,
+        args.encoding,
+        args.conflicts_only,
+        args.exit_only
+    )
+    sys.exit(EXIT_CODE_NO_CONFLICT)
 
 
 if __name__ == '__main__':
