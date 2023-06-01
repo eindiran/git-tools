@@ -3,19 +3,11 @@
 #
 #          FILE: git-conflicts
 #
-#         USAGE: git conflicts [-s | --show] <branch1> <branch2>
-#                git conflicts [-f | --files] <branch1> <branch2>
-#                git conflicts -h
+#         USAGE: git conflicts
+#                For more info, see the docs below in the usage function.
 #
 #   DESCRIPTION: Compare two branches for possible merge conflicts.
 #                See git_conflict_parser.py for more info.
-#                Examples:
-#                   `git conflicts <branch1> <branch2>` -> Find whether branch1
-#                   and branch2 would have merge conflicts.
-#                   `git conflicts --show <branch1> <branch2>` -> Show the conflicts
-#                   between branch1 and branch2
-#                   `git conflicts -f <branch1> <branch2>` -> Show the filenames
-#                   between branch1 and branch2 that contain conflicts
 #
 #  REQUIREMENTS: git
 #
@@ -26,7 +18,7 @@ set -Eeuo pipefail
 usage() {
     # Print usage info
     cat <<EOF
-        USAGE: git conflicts [-s | --show] <branch1> <branch2>
+        USAGE: git conflicts [-s | --show] [-n | --no-colors] <branch1> <branch2>
                git conflicts [-f | --files] <branch1> <branch2>
                git conflicts -h
 
@@ -37,7 +29,11 @@ usage() {
                'git conflicts <branch1> <branch2>' ->
                     Find whether branch1 and branch2 would have merge conflicts.
                'git conflicts --show <branch1> <branch2>' ->
-                    Show the full list of conflicts between branch1 and branch2.
+                    Show the full list of conflicts between branch1 and branch2,
+                    colorized.
+               'git conflicts --show --no-colors <branch1> <branch2>' ->
+                    Show the full list of conflicts between branch1 and branch2,
+                    *not* colorized.
                'git conflicts -f <branch1> <branch2>' ->
                     Show the filenames between branch1 and branch2 that
                     contain conflicts.
@@ -53,13 +49,18 @@ create_tempfile() {
 
 SHOW_CONFLICTS_MODE=false
 FILENAME_MODE=false
+NO_COLOR_MODE=false
+DEBUG_MODE=false
 
-PARSED_ARGUMENTS=$(getopt -a -n git-conflicts -o sfh --long show,files,help -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n gitconflicts -o sfnh --long show,files,no-colors,help -- "$@")
 VALID_PARSE=$?
 if [ "$VALID_PARSE" != 0 ]; then
     # getopt failed to parse the args correctly
     usage
     exit 2
+fi
+if $DEBUG_MODE ; then
+    echo "${PARSED_ARGUMENTS}"
 fi
 eval set -- "$PARSED_ARGUMENTS"
 while :
@@ -71,6 +72,10 @@ do
             ;;
         -f | --files)
             FILENAME_MODE=true
+            shift
+            ;;
+        -n | --no-colors)
+            NO_COLOR_MODE=true
             shift
             ;;
         -h | --help)
@@ -101,9 +106,13 @@ trap 'rm -f "${git_output_tempfile}"' EXIT
 git merge-tree "$(git merge-base "${branch1}" "${branch2}")" "${branch1}" "${branch2}" > "${git_output_tempfile}"
 
 if $SHOW_CONFLICTS_MODE ; then
-    git_conflict_parser.py -f "${git_output_tempfile}"
+    if $NO_COLOR_MODE ; then
+        git_conflict_parser.py -f "${git_output_tempfile}"
+    else
+        git_conflict_parser.py -f "${git_output_tempfile}" -C
+    fi
 elif $FILENAME_MODE ; then
     git_conflict_parser.py -f "${git_output_tempfile}" -c
 else
-    git_conflict_parser.py -f "${git_output_tempfile}" -e
+    git_conflict_parser.py -f "${git_output_tempfile}" -x
 fi
