@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-jnb
+#
+#         USAGE: git jnb
+#
+#   DESCRIPTION: Create and checkout a new branch using the specific
+#                pattern <author initials>_<YYYYMMDD>_<branch name string>
+#                   `git jnb foo` -> Create and checkout new branch called
+#                   "ei_20230531_foo"
+#                   `git jnb multi word string` ->
+#                   "ei_20230531_multi_word_string"
+#
+#  REQUIREMENTS: git
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+GIT_JNB_INITIALS="ei"
+
+# Get the branch name string
+BRANCH_NAME_STR="$(printf "_%s" "$@")"
+
+git checkout -b "${GIT_JNB_INITIALS}_$(gdate +%Y%m%d)${BRANCH_NAME_STR}"
