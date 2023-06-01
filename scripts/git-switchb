@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-switchb
+#
+#         USAGE: git switchb
+#
+#   DESCRIPTION: Open up an interactive menu to choose between recently checked
+#                out branches, and select one to switch to it.
+#                See git-recentch and git-popb for more info.
+#                Examples:
+#                   `git switchb`  --> show all `git recentch`
+#                   `git switchb 5 --> show `git recentch 5`
+#
+#  REQUIREMENTS: git
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+
+NUM_BRANCHES=${1:-10}
+
+BRANCHES=()
+while IFS='' read -r line; do BRANCHES+=("$line"); done < <(git recentch "${NUM_BRANCHES}")
+
+__print_branches() {
+    i=0
+    for branch in "${BRANCHES[@]}"; do
+        printf "%d: %s\n" "${i}" "${branch}"
+        ((i++))
+    done
+}
+
+NEW_BRANCH=""
+ERROR_COUNTER=0
+while true; do
+    # Print the available branches
+    __print_branches
+    # Loop taking user input until a choice is selected or the user
+    # presses `q` to quit.
+    printf "\nPress the number key corresponding to the desired branch\n"
+    printf "to check it out or press 'q' to quit.\n"
+    read -r kp
+    if [[ "${kp}" == "q" ]]; then
+        printf "Quitting, no changes made\n"
+        exit 0
+    elif [[ "${kp}" -ge 1 && "${kp}" -le ${#BRANCHES[@]} ]]; then
+        NEW_BRANCH="${BRANCHES[${kp}]}"
+        break
+    else
+        clear>"$(tty)"  # Tidy up screen, print out error and then loop
+        ((ERROR_COUNTER++))
+        if [[ "${ERROR_COUNTER}" -ge 4 ]]; then
+            printf "Several errors in a row. Exiting\n"
+            exit 1
+        else
+            printf "Keypress %s is INVALID. Try again.\n" "${kp}"
+        fi
+    fi
+done
+
+git checkout "${NEW_BRANCH}"

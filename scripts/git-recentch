@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-recentch
+#
+#         USAGE: git recentch
+#
+#   DESCRIPTION: Get recent branches by local checkout time. For recent branches
+#                ordered by commit, see `git-recentco`
+#                Examples:
+#                   `git recentch`   -> list all recent branches ordered by checkout
+#                                       time and date.
+#                   `git recentch 5` -> list the 5 most recent branches, ordered
+#                                        again by local checkout time and date.
+#
+#  REQUIREMENTS: git
+#
+#          NOTE: `git recent` defaults to git-recentco AND NOT git-recentch
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+# See this SO post for inspiration: https://stackoverflow.com/questions/25095061
+NUM_BRANCHES=20 # default number of branches to display
+if [ "$#" -gt 1 ]; then
+    printf "%s cannot take more than 1 argument!\n" "$0"
+    printf "Exiting!\n"
+    exit 1
+elif [ "$#" -eq 1 ] && [ -d "$1" ]; then
+    NUM_BRANCHES="$1"
+fi
+
+git reflog | \
+    grep -E -io "moving from ([^[:space:]]+)" | \
+    awk '{ print $3 }' | \
+    awk ' !x[$0]++' | \
+    while read -r line; do
+        git rev-parse --verify "$line" &>/dev/null && echo "$line"
+    done | \
+    head -n "$NUM_BRANCHES"
