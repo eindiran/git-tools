@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-popb
+#
+#         USAGE: git popb
+#
+#   DESCRIPTION: Switch to the most recently checked out branch locally.
+#                See git-recentch for more info.
+#                Examples:
+#                   `git popb`  -> Hop to the second line (most recently checked
+#                                  out branch other than the current branch) of
+#                                  `git recentch`.
+#
+#  REQUIREMENTS: git
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+git recentch 2 | \
+    tail -n 1 | \
+    xargs git checkout

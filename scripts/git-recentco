@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-recentco
+#
+#         USAGE: git recentco || git recent
+#
+#   DESCRIPTION: Get recent branches by commit time and date. For recent branches
+#                ordered by checkout, see `git-recentch`
+#                Examples:
+#                   `git recentco`   -> list all recent branches ordered by commit
+#                                       time and date.
+#                   `git recentco 5` -> list the 5 most recent branches, ordered
+#                                        again by time and date.
+#
+#  REQUIREMENTS: git
+#
+#          NOTE: `git recent` defaults to git-recentco AND NOT git-recentch
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+if [ "$#" -eq 1 ] && [ -d "$1" ]; then
+    git branch --sort=-committerdate | head -n "$1"
+elif [ "$#" -eq 0 ]; then
+    git branch --sort=-committerdate | cat
+else
+    # Number of args greater than 1, print usage
+    printf "%s cannot take more than 1 argument!\n" "$0"
+    exit 1
+fi
