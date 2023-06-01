@@ -23,16 +23,9 @@ set -Eu
 
 # See this SO post for inspiration: https://stackoverflow.com/questions/25095061
 NUM_BRANCHES="${1:-20}" # default number of branches to display
-# if [ "$#" -gt 1 ]; then
-#     printf "%s cannot take more than 1 argument!\n" "$0"
-#     printf "Exiting!\n"
-#     exit 1
-# elif [ "$#" -eq 1 ] && [ -d "$1" ]; then
-#     NUM_BRANCHES="$1"
-# fi
 
-# rev-parse --verify will exit with 128 on missing branches
-set +eo pipefail
+# rev-parse --verify will exit with 128 on missing branches, so make sure
+# set -e and set -o pipefail are off
 git reflog | \
     grep -E -io "moving from ([^[:space:]]+)" | \
     awk '{ print $3 }' | \

@@ -19,12 +19,8 @@
 set -Eeuo pipefail
 
 CURRENT_BRANCH="$(git branch --show-current)"
-printf "CURRENT_BRANCH: %s\n" "${CURRENT_BRANCH}"
-printf "recentch 2: %s\n" "$(git recentch 2)"
 SWITCH_TO_BRANCH="$(git recentch 2 | tail -n 1)"
-printf "SWITCH_TO_BRANCH: %s\n" "${SWITCH_TO_BRANCH}"
 if [[ "${SWITCH_TO_BRANCH}" == "${CURRENT_BRANCH}" ]]; then
     SWITCH_TO_BRANCH="$(git recentch 2 | head -n 1)"
 fi
-printf "SWITCH_TO_BRANCH: %s\n" "${SWITCH_TO_BRANCH}"
 git checkout "${SWITCH_TO_BRANCH}"
