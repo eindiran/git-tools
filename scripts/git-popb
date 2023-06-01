@@ -18,6 +18,9 @@
 #===============================================================================
 set -Eeuo pipefail
 
-git recentch 2 | \
-    tail -n 1 | \
-    xargs git checkout
+CURRENT_BRANCH="$(git branch --show-current)"
+SWITCH_TO_BRANCH="$(git recentch 2 | tail -n 1)"
+if [[ "${SWITCH_TO_BRANCH}" == "${CURRENT_BRANCH}" ]]; then
+    SWITCH_TO_BRANCH="$(git recentch 2 | head -n 1)"
+fi
+git checkout "${SWITCH_TO_BRANCH}"
