@@ -1,5 +1,5 @@
 # git-tools
-Scripts for git
+Scripts for git, enabling some of my commone workflows.
 
 ## Merge conflicts
 ### `git-conflicts`
