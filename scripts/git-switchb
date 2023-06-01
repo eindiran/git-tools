@@ -45,7 +45,7 @@ while true; do
     if [[ "${kp}" == "q" ]]; then
         printf "Quitting, no changes made\n"
         exit 0
-    elif [[ "${kp}" -ge 1 && "${kp}" -le ${#BRANCHES[@]} ]]; then
+    elif [[ "${kp}" -ge 0 && "${kp}" -le ${#BRANCHES[@]} ]]; then
         NEW_BRANCH="${BRANCHES[${kp}]}"
         break
     else
