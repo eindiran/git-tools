@@ -18,24 +18,29 @@ set -Eeuo pipefail
 usage() {
     # Print usage info
     cat <<EOF
-        USAGE: git conflicts [-s | --show] [-n | --no-colors] <branch1> <branch2>
-               git conflicts [-f | --files] <branch1> <branch2>
+        USAGE: git conflicts [-s | --show] [-n | --no-colors] [<BRANCH1>] <BRANCH2>
+               git conflicts [-f | --files] [<BRANCH1>] <BRANCH2>
                git conflicts -h
 
   DESCRIPTION:
                Compare two branches for possible merge conflicts.
                See git_conflict_parser.py for more info.
      EXAMPLES:
-               'git conflicts <branch1> <branch2>' ->
-                    Find whether branch1 and branch2 would have merge conflicts.
-               'git conflicts --show <branch1> <branch2>' ->
-                    Show the full list of conflicts between branch1 and branch2,
+               'git conflicts <BRANCH1> <BRANCH2>' ->
+                    Find whether BRANCH1 and BRANCH2 would have merge conflicts.
+               'git conflicts <BRANCH2>' ->
+                    Find whether the current branch and BRANCH2 would have merge conflicts.
+               'git conflicts --show <BRANCH1> <BRANCH2>' ->
+                    Show the full list of conflicts between BRANCH1 and BRANCH2,
                     colorized.
-               'git conflicts --show --no-colors <branch1> <branch2>' ->
-                    Show the full list of conflicts between branch1 and branch2,
+               'git conflicts -s <BRANCH2>' ->
+                    Show the full list of conflicts between the current branch and BRANCH2,
+                    colorized.
+               'git conflicts --show --no-colors <BRANCH1> <BRANCH2>' ->
+                    Show the full list of conflicts between BRANCH1 and BRANCH2,
                     *not* colorized.
-               'git conflicts -f <branch1> <branch2>' ->
-                    Show the filenames between branch1 and branch2 that
+               'git conflicts -f <BRANCH1> <BRANCH2>' ->
+                    Show the filenames between BRANCH1 and BRANCH2 that
                     contain conflicts.
 EOF
 
@@ -94,25 +99,30 @@ do
     esac
 done
 
-if [ "$#" -ne 2 ]; then
-    printf "Must specify exactly 2 branches names; %d specified instead\n" "$#"
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+    printf "Must specify 1 or 2 branches names; %d specified instead\n" "$#"
     usage
     exit 2
 fi
-branch1="${1}"
-branch2="${2}"
-git_output_tempfile="$(create_tempfile)"
-trap 'rm -f "${git_output_tempfile}"' EXIT
-git merge-tree "$(git merge-base "${branch1}" "${branch2}")" "${branch1}" "${branch2}" > "${git_output_tempfile}"
+if [ "$#" -eq 1 ]; then
+    BRANCH1="$(git branch --show-current)"
+    BRANCH2="${1}"
+else
+    BRANCH1="${1}"
+    BRANCH2="${2}"
+fi
+GIT_OUTPUT_TEMPFILE="$(create_tempfile)"
+trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
+git merge-tree "$(git merge-base "${BRANCH1}" "${BRANCH2}")" "${BRANCH1}" "${BRANCH2}" > "${GIT_OUTPUT_TEMPFILE}"
 
 if $SHOW_CONFLICTS_MODE ; then
     if $NO_COLOR_MODE ; then
-        git_conflict_parser.py -f "${git_output_tempfile}"
+        git_conflict_parser.py -f "${GIT_OUTPUT_TEMPFILE}"
     else
-        git_conflict_parser.py -f "${git_output_tempfile}" -C
+        git_conflict_parser.py -f "${GIT_OUTPUT_TEMPFILE}" -C
     fi
 elif $FILENAME_MODE ; then
-    git_conflict_parser.py -f "${git_output_tempfile}" -c
+    git_conflict_parser.py -f "${GIT_OUTPUT_TEMPFILE}" -c
 else
-    git_conflict_parser.py -f "${git_output_tempfile}" -x
+    git_conflict_parser.py -f "${GIT_OUTPUT_TEMPFILE}" -x
 fi
