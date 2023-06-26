@@ -85,7 +85,12 @@ else
     BRANCH1="${1}"
     BRANCH2="${2}"
 fi
+printf "Merging %s into %s\n" "${BRANCH2}" "${BRANCH1}"
 GIT_OUTPUT_TEMPFILE="$(create_tempfile)"
+printf "Using tmpfile: %s\n" "${GIT_OUTPUT_TEMPFILE}"
 trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
+echo "git merge ${BRANCH1} ${BRANCH2} 1> ${GIT_OUTPUT_TEMPFILE}"
 git merge "${BRANCH1}" "${BRANCH2}" 1> "${GIT_OUTPUT_TEMPFILE}"
+echo "./git_merge_parser.py -f ${GIT_OUTPUT_TEMPFILE} | xargs -o $EDITOR"
 ./git_merge_parser.py -f "${GIT_OUTPUT_TEMPFILE}" | xargs -o "$EDITOR"
+cat "${GIT_OUTPUT_TEMPFILE}"
