@@ -26,3 +26,7 @@ Tools for switching to recent branches. `popb` for last branch, `switchb` for an
 #### `git-jnb`
 
 Enables `git jnb`; auto-format a new branch name based on a short text description and switch to it; base is current HEAD.
+
+#### `git-diffago`
+
+Enables `git diffago`; compare working tree with commit N commits ago (from `HEAD`). Eg `git diffago 3` = `git diff HEAD~3` and `git diffago 3 HEAD` = `git diffago HEAD~3 HEAD`.
