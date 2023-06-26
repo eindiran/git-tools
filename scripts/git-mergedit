@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-mergedit
+#
+#         USAGE: git mergedit [-h]
+#
+#   DESCRIPTION: Run `git merge`, capture the output, and pass the conflicts
+#                into $EDITOR.
+#
+#  REQUIREMENTS: git, Python 3
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+
+set -eEuo pipefail
+
+usage() {
+    cat <<EOF
+        USAGE: git mergedit [<BRANCH1>] <BRANCH2>
+               git mergedit -h
+
+  DESCRIPTION:
+               Run a 'git merge' on two branches, capture the output, and open
+               any files found by git_merge_parser.py as conflicts to the editor set
+               in \$EDITOR.
+               See git_merge_parser.py for more info.
+     EXAMPLES:
+               'git mergedit <BRANCH1> <BRANCH2>' ->
+                    Merge BRANCH1 and BRANCH2 and open the conflicts in
+                    \$EDITOR.
+               'git mergedit <BRANCH2>' ->
+                    Merge the current branch and BRANCH2 and open the conflicts in
+                    \$EDITOR.
+               'git mergedit -h' ->
+                    Show the usage info and edit.
+EOF
+}
+
+create_tempfile() {
+    # Helper function for creating tempfiles
+    tempprefix=$(basename "$0")
+    mktemp "/tmp/${tempprefix}.XXXXXXXX"
+}
+
+DEBUG_MODE=false
+PARSED_ARGUMENTS=$(getopt -a -n gitconflicts -o h --long help -- "$@")
+VALID_PARSE=$?
+if [ "$VALID_PARSE" != 0 ]; then
+    # getopt failed to parse the args correctly
+    usage
+    exit 2
+fi
+if $DEBUG_MODE ; then
+    echo "${PARSED_ARGUMENTS}"
+fi
+eval set -- "$PARSED_ARGUMENTS"
+while :
+do
+    case "$1" in
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            printf "Invalid option: %s\n" "$1"
+            usage
+            exit 2
+            ;;
+    esac
+done
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+    printf "Must specify 1 or 2 branches names; %d specified instead\n" "$#"
+    usage
+    exit 2
+fi
+if [ "$#" -eq 1 ]; then
+    BRANCH1="$(git branch --show-current)"
+    BRANCH2="${1}"
+else
+    BRANCH1="${1}"
+    BRANCH2="${2}"
+fi
+GIT_OUTPUT_TEMPFILE="$(create_tempfile)"
+trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
+git merge "${BRANCH1}" "${BRANCH2}" 1> "${GIT_OUTPUT_TEMPFILE}"
+./git_merge_parser.py -f "${GIT_OUTPUT_TEMPFILE}" | xargs -o "$EDITOR"
