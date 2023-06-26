@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-diffago
+#
+#         USAGE: git diffago
+#
+#   DESCRIPTION: Compare the working tree with the current branch N commits ago
+#                Examples:
+#                   `git diffago 3`  -> Semantically identical to `git diff HEAD~3`
+#                   (WORKING TREE)
+#                   `git diffago 3 HEAD` -> `git diff HEAD~3 HEAD`
+#                   (HEAD)
+#
+#  REQUIREMENTS: git
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+# shellcheck disable=SC2068,SC2086
+git diff HEAD~$*
