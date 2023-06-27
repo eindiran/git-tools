@@ -95,11 +95,12 @@ _debug_print "Merging ${BRANCH2} into ${BRANCH1}\n"
 GIT_OUTPUT_TEMPFILE="$(create_tempfile)"
 _debug_print "Using tmpfile: ${GIT_OUTPUT_TEMPFILE}\n"
 # trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
+# Disable fail on error
+set +e
 _debug_print "git merge ${BRANCH2} ${BRANCH1} > ${GIT_OUTPUT_TEMPFILE}\n"
 git merge "${BRANCH2}" "${BRANCH1}" > "${GIT_OUTPUT_TEMPFILE}"
 _debug_print "./git_merge_parser.py -f ${GIT_OUTPUT_TEMPFILE} | xargs -o ${EDITOR}\n"
-# Disable fail on error
-set +e
+# Parse the conflicting file names from git merge stdout
 ./git_merge_parser.py -f "${GIT_OUTPUT_TEMPFILE}" | xargs -o "${EDITOR}"
 # Re-enable fail on error
 set -e
