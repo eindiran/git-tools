@@ -64,11 +64,11 @@ def main() -> None:
     files_with_conflicts: [str] = []
     with open(args.filename, 'r') as f:
         for line in f:
-            m: Match = re.match(line, CONFLICT_REGEX)
+            m: Match = CONFLICT_REGEX.match(line)
             if m:
                 if args.exit_only:
                     sys.exit(SUCCESS_CONFLICTS)
-                files_with_conflicts.append(m.groups(0).strip())
+                files_with_conflicts.append(m.groups()[0].strip())
     if not args.exit_only:
         for filename in files_with_conflicts:
             print(filename + '\n')
