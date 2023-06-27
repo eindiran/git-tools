@@ -8,6 +8,11 @@ Enables `git conflicts`; check the conflicts that will occur when merging two sp
 
 Uses `git_conflict_parser.py` under the hood.
 
+### `git-mergedit`
+
+Enables `git mergedit`; does a merge and then opens all files with conflicts in $EDITOR. 
+
+Uses `git_merge_parser.py` under the hood.
 
 ## Recent branches:
 #### `git-recentch`
