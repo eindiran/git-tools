@@ -94,7 +94,7 @@ fi
 _debug_print "Merging ${BRANCH2} into ${BRANCH1}"
 GIT_OUTPUT_TEMPFILE="$(create_tempfile)"
 _debug_print "Using tmpfile: ${GIT_OUTPUT_TEMPFILE}"
-# trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
+trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
 # Disable fail on error
 set +e
 _debug_print "git merge ${BRANCH2} ${BRANCH1} > ${GIT_OUTPUT_TEMPFILE}"
