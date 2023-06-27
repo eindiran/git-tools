@@ -37,13 +37,20 @@ usage() {
 EOF
 }
 
+DEBUG_MODE=false
+_debug_print() {
+    # Print iff DEBUG_MODE=true
+    if $DEBUG_MODE; then
+        # shellcheck disable=SC2086,SC2068
+        printf $@
+    fi
+}
 create_tempfile() {
     # Helper function for creating tempfiles
     tempprefix=$(basename "$0")
     mktemp "/tmp/${tempprefix}.XXXXXXXX"
 }
 
-DEBUG_MODE=false
 PARSED_ARGUMENTS=$(getopt -a -n gitconflicts -o h --long help -- "$@")
 VALID_PARSE=$?
 if [ "$VALID_PARSE" != 0 ]; then
@@ -85,12 +92,18 @@ else
     BRANCH1="${1}"
     BRANCH2="${2}"
 fi
-printf "Merging %s into %s\n" "${BRANCH2}" "${BRANCH1}"
+_debug_print "Merging %s into %s\n" "${BRANCH2}" "${BRANCH1}"
 GIT_OUTPUT_TEMPFILE="$(create_tempfile)"
-printf "Using tmpfile: %s\n" "${GIT_OUTPUT_TEMPFILE}"
+_debug_print "Using tmpfile: %s\n" "${GIT_OUTPUT_TEMPFILE}"
 trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
-echo "git merge ${BRANCH1} ${BRANCH2} 1> ${GIT_OUTPUT_TEMPFILE}"
+_debug_print "git merge %s %s 1> %s\n" "${BRANCH1}" "${BRANCH2}" "${GIT_OUTPUT_TEMPFILE}"
 git merge "${BRANCH1}" "${BRANCH2}" 1> "${GIT_OUTPUT_TEMPFILE}"
-echo "./git_merge_parser.py -f ${GIT_OUTPUT_TEMPFILE} | xargs -o $EDITOR"
+_debug_print "./git_merge_parser.py -f %s | xargs -o %s\n" "${GIT_OUTPUT_TEMPFILE}" "$EDITOR"
+# Disable fail on error
+set +e
 ./git_merge_parser.py -f "${GIT_OUTPUT_TEMPFILE}" | xargs -o "$EDITOR"
-cat "${GIT_OUTPUT_TEMPFILE}"
+# Re-enable fail on error
+set -e
+if $DEBUG_MODE; then
+    cat "${GIT_OUTPUT_TEMPFILE}"
+fi
