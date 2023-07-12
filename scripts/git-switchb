@@ -18,33 +18,72 @@
 #===============================================================================
 set -Eeuo pipefail
 
-
 NUM_BRANCHES=${1:-10}
-
 BRANCHES=()
-while IFS='' read -r line; do BRANCHES+=("$line"); done < <(git recentch "${NUM_BRANCHES}")
+
+__reset_branches() {
+    BRANCHES=()
+    while IFS='' read -r line; do
+        BRANCHES+=("$line")
+    done < <(git recentch "${NUM_BRANCHES}")
+}
+
+__startswith() {
+    # Check that second argument begins with first argument
+    case "$2" in
+        "$1"*) true   ;;
+        *)     false  ;;
+    esac
+}
 
 __print_branches() {
+    # Print the branches; note that this will fail with a 1
+    # exit code if set -e is enabled on single-entry arrays,
+    # so temporarily set +e
+    set +e
     i=0
     for branch in "${BRANCHES[@]}"; do
         printf "%d: %s\n" "${i}" "${branch}"
         ((i++))
     done
+    set -e
+}
+
+__search_branches() {
+    # Get all branches matching a string
+    BRANCHES=()  # Empty out global branches array
+    while IFS='' read -r line; do
+        BRANCHES+=("$line")
+    done < <(
+        git branch |
+            grep "${1}" |
+            head -n "${NUM_BRANCHES}" |
+            sed -e 's/^[* \t]*//'  # Remove word-initial whitespace and asterisks
+        )
+    clear>"$(tty)"  # Tidy up screen
 }
 
 NEW_BRANCH=""
 ERROR_COUNTER=0
+__reset_branches  # Set the branches initially to recent ones
 while true; do
     # Print the available branches
     __print_branches
     # Loop taking user input until a choice is selected or the user
     # presses `q` to quit.
     printf "\nPress the number key corresponding to the desired branch\n"
-    printf "to check it out or press 'q' to quit.\n"
+    printf "to check it out, press '/' followed by a string to search,\n"
+    printf "press 'r' to reset the branches after a search,\n"
+    printf "or press 'q' to quit.\n"
     read -r kp
     if [[ "${kp}" == "q" ]]; then
         printf "Quitting, no changes made\n"
         exit 0
+    elif [[ "${kp}" == "r" ]]; then
+        clear>"$(tty)"
+        __reset_branches
+    elif __startswith "/" "${kp}"; then
+        __search_branches "${kp:1}"
     elif [[ "${kp}" -ge 0 && "${kp}" -le ${#BRANCHES[@]} ]]; then
         NEW_BRANCH="${BRANCHES[${kp}]}"
         break
