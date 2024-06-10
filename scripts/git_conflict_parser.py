@@ -1,88 +1,88 @@
 #!/usr/bin/env python3
-'''
+"""
 git_conflict_parser.py
 
 Read in a diff from a merge-tree, and show the conflicts
 split up by file.
-'''
+"""
 import argparse
 import re
 import sys
-from typing import IO, List, Match, Optional, Pattern, Set
-from colors import color # ansicolor
+from typing import IO
 
+# ansicolor:
+from colors import color  # type: ignore
 
 # GLOBALS:
-FILEPATH_REGEX: Pattern = re.compile(r'^\s+base\s+[0-9]+\s+[a-fA-F0-9]+\s+(.*?)$')
-START_PATTERN: str = r'+<<<<<<< .our'
-END_PATTERN: str = r'+>>>>>>> .their'
-DEFAULT_ENCODING: str = 'utf8'
+FILEPATH_REGEX = re.compile(r"^\s+base\s+[0-9]+\s+[a-fA-F0-9]+\s+(.*?)$")
+START_PATTERN: str = r"+<<<<<<< .our"
+END_PATTERN: str = r"+>>>>>>> .their"
+DEFAULT_ENCODING: str = "utf8"
 EXIT_CODE_CONFLICT_FOUND: int = 128
 EXIT_CODE_NO_CONFLICT: int = 0
 USE_COLORS: bool = False
 
 
-def _colorize(text: str,
-              fg_color: Optional[str]=None,
-              bg_color: Optional[str]=None,
-              style: Optional[str]=None) -> None:
-    '''
+def _colorize(
+    text: str, fg_color: str | None = None, bg_color: str | None = None, style: str | None = None
+) -> None:
+    """
     Wrap the print function to optionally print with ANSI
     colors based on the global USE_COLORS.
-    '''
+    """
     if USE_COLORS:
-        print(color(text, fg=fg_color, bg=bg_color, style=style), end='')
+        print(color(text, fg=fg_color, bg=bg_color, style=style), end="")
     else:
-        print(text, end='')
+        print(text, end="")
 
 
-def _output(output_file: Optional[IO],
-            text: str,
-            conflicting_files_only: bool=False,
-            exit_only: bool=False,
-            fg_color: Optional[str]=None,
-            bg_color: Optional[str]=None,
-            style: Optional[str]=None) -> None:
-    '''
+def _output(  # noqa: PLR0913
+    output_file: IO | None,
+    text: str,
+    conflicting_files_only: bool = False,
+    exit_only: bool = False,
+    fg_color: str | None = None,
+    bg_color: str | None = None,
+    style: str | None = None,
+) -> None:
+    """
     Output function -- will either write to a specified file object,
     or to stdout if the filename is None.
-    '''
+    """
     if not conflicting_files_only and not exit_only:
         output_file.write(text) if output_file else _colorize(
-            text,
-            fg_color=fg_color,
-            bg_color=bg_color,
-            style=style
+            text, fg_color=fg_color, bg_color=bg_color, style=style
         )
 
 
-def conflict_parser(
-        filename: str,
-        output_file: Optional[str],
-        encoding: str=DEFAULT_ENCODING,
-        conflicting_files_only: bool=False,
-        exit_only: bool=False) -> None:
-    '''
+def conflict_parser(  # noqa: PLR0912
+    filename: str,
+    output_file: str | None,
+    encoding: str = DEFAULT_ENCODING,
+    conflicting_files_only: bool = False,
+    exit_only: bool = False,
+) -> None:
+    """
     Parse conflicts for the merge of two branches foo and bar
     out of the output of:
         `git merge-tree $(git merge-base foo bar) foo bar`
     Generate a conflict diff (or print to stdout).
-    '''
-    lines: List[str] = []
-    files_with_conflicts: Set[str] = set()
-    o: Optional[IO] = None
+    """
+    lines: list[str] = []
+    files_with_conflicts: set[str] = set()
+    o: IO | None = None
     currently_matching: bool = False
-    last_diff_filename: Optional[str] = None
-    with open(filename, 'r', encoding=encoding) as f:
+    last_diff_filename: str = ""
+    with open(filename, encoding=encoding) as f:
         for line in f:
             lines.append(line)
     if output_file:
-        o = open(output_file, 'w', encoding=encoding)
+        o = open(output_file, "w", encoding=encoding)
     for line in lines:
-        m: Match = re.match(FILEPATH_REGEX, line)
+        m = re.match(FILEPATH_REGEX, line)
         if m:
             # Store the last filename
-            last_diff_filename = ''.join(m.groups(0)) + '\n'
+            last_diff_filename = "".join(m.groups("0")) + "\n"
         elif line.startswith(START_PATTERN):
             if exit_only:
                 sys.exit(EXIT_CODE_CONFLICT_FOUND)
@@ -90,109 +90,98 @@ def conflict_parser(
             try:
                 # Write out the last filename we stored, or
                 # add it to the set in conflicting_filenames_only mode
-                _output(
-                    o,
-                    last_diff_filename,
-                    conflicting_files_only,
-                    fg_color='red'
-                )
+                _output(o, last_diff_filename, conflicting_files_only, fg_color="red")
                 files_with_conflicts.add(last_diff_filename)
             except TypeError as e:
                 # In this case, the format of the input file is
                 # very likely messed up
-                raise TypeError('Failed to match filename regex, ' +
-                                'input format wrong') from e
-            _output(o, line, conflicting_files_only, fg_color='blue')
+                raise TypeError("Failed to match filename regex, " + "input format wrong") from e
+            _output(o, line, conflicting_files_only, fg_color="blue")
         elif line.startswith(END_PATTERN):
             currently_matching = False
-            _output(o, line + '\n', conflicting_files_only, fg_color='blue')
+            _output(o, line + "\n", conflicting_files_only, fg_color="blue")
         elif currently_matching:
-            if line.strip().endswith('======='):
-                _output(o, line, conflicting_files_only, fg_color='blue')
-            elif line.startswith('+'):
-                _output(o, line, conflicting_files_only, fg_color='green')
-            elif line.startswith('-'):
-                _output(o, line, conflicting_files_only, fg_color='yellow')
+            if line.strip().endswith("======="):
+                _output(o, line, conflicting_files_only, fg_color="blue")
+            elif line.startswith("+"):
+                _output(o, line, conflicting_files_only, fg_color="green")
+            elif line.startswith("-"):
+                _output(o, line, conflicting_files_only, fg_color="yellow")
             else:
                 _output(o, line, conflicting_files_only)
-    _output(o, '', conflicting_files_only) # Final newline in file.
+    _output(o, "", conflicting_files_only)  # Final newline in file.
     if conflicting_files_only:
         # In this case we should just print out the files with conflicts:
-        for f in files_with_conflicts:
-            _output(o, f)
+        for f in files_with_conflicts:  # type: ignore
+            _output(o, f)  # type: ignore
     if o:
         o.close()
 
 
 def main():
-    '''
+    """
     Arg parser that passes args over to conflict_parser().
-    '''
+    """
     parser = argparse.ArgumentParser(
-        description='Parse a diff generated by `git merge-tree` ' +
-        'for conflicts in a potential `git merge` between two branches'
+        description="Parse a diff generated by `git merge-tree` "
+        + "for conflicts in a potential `git merge` between two branches"
     )
     parser.add_argument(
-        '-f',
-        '--file',
-        dest='filename',
+        "-f",
+        "--file",
+        dest="filename",
         type=str,
         required=True,
-        help='Path to a file containing the diff generated by `git merge-tree`'
+        help="Path to a file containing the diff generated by `git merge-tree`",
     )
     parser.add_argument(
-        '-e',
-        '--encoding',
-        dest='encoding',
+        "-e",
+        "--encoding",
+        dest="encoding",
         type=str,
         required=False,
-        help='Encoding of specified file. Default: UTF-8'
+        help="Encoding of specified file. Default: UTF-8",
     )
     parser.add_argument(
-        '-o',
-        '--output_file',
-        dest='output_file',
+        "-o",
+        "--output_file",
+        dest="output_file",
         type=str,
         required=False,
-        help='Optional filename to write the resulting conflict diff to. Default: STDOUT'
+        help="Optional filename to write the resulting conflict diff to. Default: STDOUT",
     )
     mode_group = parser.add_mutually_exclusive_group()
     mode_group.add_argument(
-        '-c',
-        '--conflicts_only',
-        dest='conflicts_only',
-        action='store_true',
-        help='Display files with conflicts only, rather than conflict text. Default: False'
+        "-c",
+        "--conflicts_only",
+        dest="conflicts_only",
+        action="store_true",
+        help="Display files with conflicts only, rather than conflict text. Default: False",
     )
     mode_group.add_argument(
-        '-x',
-        '--exit_only',
-        dest='exit_only',
-        action='store_true',
-        help='Immediately exit with 128 if a conflict is found, ' +
-        'exiting with 0 otherwise. Default: False'
+        "-x",
+        "--exit_only",
+        dest="exit_only",
+        action="store_true",
+        help="Immediately exit with 128 if a conflict is found, "
+        + "exiting with 0 otherwise. Default: False",
     )
     parser.add_argument(
-        '-C',
-        '--colorize',
-        dest='colorize',
-        action='store_true',
-        help='Colorize text printed to stdout. Default: False'
-
+        "-C",
+        "--colorize",
+        dest="colorize",
+        action="store_true",
+        help="Colorize text printed to stdout. Default: False",
     )
     args = parser.parse_args()
     if args.colorize:
-        global USE_COLORS
+        global USE_COLORS  # noqa: PLW0603
         USE_COLORS = True
     conflict_parser(
-        args.filename,
-        args.output_file,
-        args.encoding,
-        args.conflicts_only,
-        args.exit_only
+        args.filename, args.output_file, args.encoding, args.conflicts_only, args.exit_only
     )
     sys.exit(EXIT_CODE_NO_CONFLICT)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
