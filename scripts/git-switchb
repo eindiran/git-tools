@@ -59,8 +59,8 @@ __search_branches() {
             grep "${1}" |
             head -n "${NUM_BRANCHES}" |
             sed -e 's/^[* \t]*//'  # Remove word-initial whitespace and asterisks
-        )
-    clear>"$(tty)"  # Tidy up screen
+    )
+    clear >"$(tty)" # Tidy up screen
 }
 
 NEW_BRANCH=""
@@ -80,7 +80,7 @@ while true; do
         printf "Quitting, no changes made\n"
         exit 0
     elif [[ "${kp}" == "r" ]]; then
-        clear>"$(tty)"
+        clear >"$(tty)"
         __reset_branches
     elif __startswith "/" "${kp}"; then
         __search_branches "${kp:1}"
@@ -88,7 +88,7 @@ while true; do
         NEW_BRANCH="${BRANCHES[${kp}]}"
         break
     else
-        clear>"$(tty)"  # Tidy up screen, print out error and then loop
+        clear >"$(tty)" # Tidy up screen, print out error and then loop
         ((ERROR_COUNTER++))
         if [[ "${ERROR_COUNTER}" -ge 4 ]]; then
             printf "Several errors in a row. Exiting\n"

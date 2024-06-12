@@ -26,11 +26,11 @@ NUM_BRANCHES="${1:-20}" # default number of branches to display
 
 # rev-parse --verify will exit with 128 on missing branches, so make sure
 # set -e and set -o pipefail are off
-git reflog | \
-    grep -E -io "moving from ([^[:space:]]+)" | \
-    awk '{ print $3 }' | \
-    awk ' !x[$0]++' | \
+git reflog |
+    grep -E -io "moving from ([^[:space:]]+)" |
+    awk '{ print $3 }' |
+    awk ' !x[$0]++' |
     while read -r line; do
         git rev-parse --verify "$line" &>/dev/null && echo "$line"
-    done | \
+    done |
     head -n "$NUM_BRANCHES"

@@ -57,12 +57,11 @@ if [ "$VALID_PARSE" != 0 ]; then
     usage
     exit 2
 fi
-if $DEBUG_MODE ; then
+if $DEBUG_MODE; then
     echo "${PARSED_ARGUMENTS}"
 fi
 eval set -- "$PARSED_ARGUMENTS"
-while :
-do
+while :; do
     case "$1" in
         -h | --help)
             usage
@@ -98,7 +97,7 @@ trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
 # Disable fail on error
 set +e
 _debug_print "git merge ${BRANCH2} ${BRANCH1} > ${GIT_OUTPUT_TEMPFILE}"
-git merge "${BRANCH2}" "${BRANCH1}" > "${GIT_OUTPUT_TEMPFILE}"
+git merge "${BRANCH2}" "${BRANCH1}" >"${GIT_OUTPUT_TEMPFILE}"
 _debug_print "status: $?"
 _debug_print "git_merge_parser.py -f ${GIT_OUTPUT_TEMPFILE} | xargs -o ${EDITOR}"
 # Parse the conflicting file names from git merge stdout

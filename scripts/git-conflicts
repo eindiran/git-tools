@@ -64,12 +64,11 @@ if [ "$VALID_PARSE" != 0 ]; then
     usage
     exit 2
 fi
-if $DEBUG_MODE ; then
+if $DEBUG_MODE; then
     echo "${PARSED_ARGUMENTS}"
 fi
 eval set -- "$PARSED_ARGUMENTS"
-while :
-do
+while :; do
     case "$1" in
         -s | --show)
             SHOW_CONFLICTS_MODE=true
@@ -113,15 +112,15 @@ else
 fi
 GIT_OUTPUT_TEMPFILE="$(create_tempfile)"
 trap 'rm -f "${GIT_OUTPUT_TEMPFILE}"' EXIT
-git merge-tree "$(git merge-base "${BRANCH1}" "${BRANCH2}")" "${BRANCH1}" "${BRANCH2}" > "${GIT_OUTPUT_TEMPFILE}"
+git merge-tree "$(git merge-base "${BRANCH1}" "${BRANCH2}")" "${BRANCH1}" "${BRANCH2}" >"${GIT_OUTPUT_TEMPFILE}"
 
-if $SHOW_CONFLICTS_MODE ; then
-    if $NO_COLOR_MODE ; then
+if $SHOW_CONFLICTS_MODE; then
+    if $NO_COLOR_MODE; then
         git_conflict_parser.py -f "${GIT_OUTPUT_TEMPFILE}"
     else
         git_conflict_parser.py -f "${GIT_OUTPUT_TEMPFILE}" -C
     fi
-elif $FILENAME_MODE ; then
+elif $FILENAME_MODE; then
     git_conflict_parser.py -f "${GIT_OUTPUT_TEMPFILE}" -c
 else
     git_conflict_parser.py -f "${GIT_OUTPUT_TEMPFILE}" -x
