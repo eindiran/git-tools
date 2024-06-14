@@ -15,13 +15,17 @@ Enables `git mergedit`; does a merge and then opens all files with conflicts in 
 Uses `git_merge_parser.py` under the hood.
 
 ## Recent branches:
+#### `git-recent`
+
+Enables `git recent` show recent branches with timestamps.
+
 #### `git-recentch`
 
-Enables `git recentch`; get recent branches by local checkout time.
+Enables `git recentch`; get recent branches sorted by local checkout time.
 
 #### `git-recentco`
 
-Enables `git recent` and `git recentco`; get recent branches by last commit time.
+Enables `git recentco`; get recent branches by last commit time.
 
 #### `git-popb` / `git-switchb`
 

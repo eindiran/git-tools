@@ -18,14 +18,29 @@
 #===============================================================================
 set -Eeuo pipefail
 
-NUM_BRANCHES=${1:-10}
-BRANCHES=()
+num_branches=${1:-10}
+branches=()
+
+# Constants:
+# Current branch name and number colors:
+CB_NAME_ANSI="\e[0;100m"  # Black, HI background
+CB_NUM_ANSI="\e[1;97m"    # Bold, HI white
+# Other branch recent name and number colors:
+OBR_NUM_ANSI="\e[1;34m"    # Bold blue
+OBR_NAME_ANSI="\e[1;33m"   # Bold yellow
+# Other branch old name and number colors:
+OBO_NUM_ANSI="\e[0;34m"    # Reg blue
+OBO_NAME_ANSI="\e[0;33m"   # Reg yellow
+# Final branches:
+FB_FROM_NAME_ANSI="\e[1;92m" # Bold, HI green
+FB_TO_NAME_ANSI="\e[1;97m"   # Bold, HI white
+ANSI_RESET="\e[0m"
 
 __reset_branches() {
-    BRANCHES=()
+    branches=()
     while IFS='' read -r line; do
-        BRANCHES+=("$line")
-    done < <(git recentch "${NUM_BRANCHES}")
+        branches+=("$line")
+    done < <(git recentch "${num_branches}")
 }
 
 __startswith() {
@@ -36,45 +51,62 @@ __startswith() {
     esac
 }
 
+__set_branch_number() {
+    if [ -n "${1//^ /}" ]; then
+        num_branches="${1//^ /}"
+    fi
+}
+
 __print_branches() {
+    local searching="${1:-false}"
     # Print the branches; note that this will fail with a 1
     # exit code if set -e is enabled on single-entry arrays,
     # so temporarily set +e
     set +e
-    i=0
-    for branch in "${BRANCHES[@]}"; do
-        printf "%d: %s\n" "${i}" "${branch}"
-        ((i++))
+    # Iterate over the branches in reverse order so the most
+    # recent matching branch is at the bottom.
+    for ((i = ${#branches[@]} - 1; i >= 0; i--)); do
+        branch="${branches[i]}"
+        if ((i == 0)) && [[ "${searching}" == false ]]; then
+            # Current branch:
+            printf "${CB_NUM_ANSI}%d${ANSI_RESET}: ${CB_NAME_ANSI}%s${ANSI_RESET}*\n" "${i}" "${branch}"
+        elif ((i <= 10)); then
+            printf "${OBR_NUM_ANSI}%d${ANSI_RESET}: ${OBR_NAME_ANSI}%s${ANSI_RESET}\n" "${i}" "${branch}"
+        else
+            printf "${OBO_NUM_ANSI}%d${ANSI_RESET}: ${OBO_NAME_ANSI}%s${ANSI_RESET}\n" "${i}" "${branch}"
+        fi
     done
     set -e
 }
 
 __search_branches() {
     # Get all branches matching a string
-    BRANCHES=()  # Empty out global branches array
+    branches=()  # Empty out global branches array
     while IFS='' read -r line; do
-        BRANCHES+=("$line")
+        branches+=("$line")
     done < <(
-        git branch |
+        git recentch -1 |
             grep "${1}" |
-            head -n "${NUM_BRANCHES}" |
+            head -n "${num_branches}" |
             sed -e 's/^[* \t]*//'  # Remove word-initial whitespace and asterisks
     )
     clear >"$(tty)" # Tidy up screen
 }
 
-NEW_BRANCH=""
-ERROR_COUNTER=0
+new_branch=""
+error_counter=0
+searching=false
 __reset_branches  # Set the branches initially to recent ones
 while true; do
     # Print the available branches
-    __print_branches
+    __print_branches "${searching}"
     # Loop taking user input until a choice is selected or the user
     # presses `q` to quit.
     printf "\nPress the number key corresponding to the desired branch\n"
     printf "to check it out, press '/' followed by a string to search,\n"
-    printf "press 'r' to reset the branches after a search,\n"
-    printf "or press 'q' to quit.\n"
+    printf "press 'r' to reset the branches after a search, press '='\n"
+    printf "followed by a number to set the number of branches to return,\n"
+    printf "or press 'q' to quit.\n\n"
     read -r kp
     if [[ "${kp}" == "q" ]]; then
         printf "Quitting, no changes made\n"
@@ -82,15 +114,21 @@ while true; do
     elif [[ "${kp}" == "r" ]]; then
         clear >"$(tty)"
         __reset_branches
+        searching=false
+    elif __startswith "=" "${kp}"; then
+        __set_branch_number "${kp:1}"
+        __reset_branches
+        searching=false
     elif __startswith "/" "${kp}"; then
         __search_branches "${kp:1}"
-    elif [[ "${kp}" -ge 0 && "${kp}" -le ${#BRANCHES[@]} ]]; then
-        NEW_BRANCH="${BRANCHES[${kp}]}"
+        searching=true
+    elif [[ "${kp}" -ge 0 && "${kp}" -le ${#branches[@]} ]]; then
+        new_branch="${branches[${kp}]}"
         break
     else
         clear >"$(tty)" # Tidy up screen, print out error and then loop
-        ((ERROR_COUNTER++))
-        if [[ "${ERROR_COUNTER}" -ge 4 ]]; then
+        ((error_counter++))
+        if [[ "${error_counter}" -ge 4 ]]; then
             printf "Several errors in a row. Exiting\n"
             exit 1
         else
@@ -99,4 +137,7 @@ while true; do
     fi
 done
 
-git checkout "${NEW_BRANCH}"
+current_branch="$(git symbolic-ref --short HEAD)"
+printf "\nswitchb - checking out ${FB_TO_NAME_ANSI}%s${ANSI_RESET}" "${new_branch}"
+printf " from ${FB_FROM_NAME_ANSI}%s${ANSI_RESET}\n\n" "${current_branch}"
+git checkout "${new_branch}"
