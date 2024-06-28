@@ -21,13 +21,13 @@
 #
 #        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
 #===============================================================================
-set -Eeuo pipefail
+set -Eu
+# rev-parse --verify will exit with 128 on missing branches, so make sure
+# set -e and set -o pipefail are off
 
 # See this SO post for inspiration: https://stackoverflow.com/questions/25095061
 NUM_BRANCHES="${1:-20}" # default number of branches to display
 
-# rev-parse --verify will exit with 128 on missing branches, so make sure
-# set -e and set -o pipefail are off
 if ((NUM_BRANCHES == -1)); then
     git reflog |
         grep -E -io "moving from ([^[:space:]]+)" |
