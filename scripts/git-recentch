@@ -29,18 +29,20 @@ set -Eu
 NUM_BRANCHES="${1:-20}" # default number of branches to display
 
 if ((NUM_BRANCHES == -1)); then
-    git reflog |
-        grep -E -io "moving from ([^[:space:]]+)" |
-        awk '{ print $3 }' |
-        awk ' !x[$0]++' |
+    git reflog show --pretty=format:'%gs ~ %gd' |
+        grep 'checkout:' |
+        grep -E -io "moving from ([^[:space:]]+) to ([^[:space:]]+)" |
+        awk '{ print $NF }' |
+        awk '!seen[$0]++' |
         while read -r line; do
             git rev-parse --verify "$line" &>/dev/null && echo "$line"
         done
 else
-    git reflog |
-        grep -E -io "moving from ([^[:space:]]+)" |
-        awk '{ print $3 }' |
-        awk ' !x[$0]++' |
+    git reflog show --pretty=format:'%gs ~ %gd' |
+        grep 'checkout:' |
+        grep -E -io "moving from ([^[:space:]]+) to ([^[:space:]]+)" |
+        awk '{ print $NF }' |
+        awk '!seen[$0]++' |
         while read -r line; do
             git rev-parse --verify "$line" &>/dev/null && echo "$line"
         done |
