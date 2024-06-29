@@ -9,8 +9,8 @@
 #                out branches, and select one to switch to it.
 #                See git-recentch and git-popb for more info.
 #                Examples:
-#                   `git switchb`  --> show all `git recentch`
-#                   `git switchb 5 --> show `git recentch 5`
+#                   `git switchb`   --> show all `git recentch`
+#                   `git switchb 5` --> show `git recentch 5`
 #
 #  REQUIREMENTS: git
 #

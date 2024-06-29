@@ -3,7 +3,7 @@
 #
 #          FILE: git-recentco
 #
-#         USAGE: git recentco || git recent
+#         USAGE: git recentco
 #
 #   DESCRIPTION: Get recent branches by commit time and date. For recent branches
 #                ordered by checkout, see `git-recentch`
@@ -14,8 +14,6 @@
 #                                        again by time and date.
 #
 #  REQUIREMENTS: git
-#
-#          NOTE: `git recent` defaults to git-recentco AND NOT git-recentch
 #
 #        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
 #===============================================================================
