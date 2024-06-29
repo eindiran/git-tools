@@ -22,15 +22,15 @@ branches=()
 
 # Constants:
 # Current branch name and number colors:
-CB_NAME_ANSI="\e[0;100m"  # Black, HI background
-CB_NUM_ANSI="\e[1;97m"    # Bold, HI white
+CB_NAME_ANSI="\e[0;100m"   # Black, HI background
+CB_NUM_ANSI="\e[1;97m"     # Bold, HI white
 # Other branch recent name and number colors:
 OBR_NUM_ANSI="\e[1;34m"    # Bold blue
 OBR_NAME_ANSI="\e[1;33m"   # Bold yellow
 # Other branch old name and number colors:
 OBO_NUM_ANSI="\e[0;34m"    # Reg blue
 OBO_NAME_ANSI="\e[0;33m"   # Reg yellow
-BHI_RED="\e[1;91m"  # Bold, high-intensity red
+TODELETE_ANSI="\e[1;91m"         # Bold, high-intensity red
 ANSI_RESET="\e[0m"
 
 __reset_branches() {
@@ -134,7 +134,7 @@ while true; do
     fi
 done
 
-printf "Press 'y' to confirm deleting the branch ${BHI_RED}%s${ANSI_RESET}\n" "${new_branch}"
+printf "Press 'y' to confirm deleting the branch ${TODELETE_ANSI}%s${ANSI_RESET}\n" "${new_branch}"
 read -r kp
 if [[ "${kp}" == "y" ]]; then
     git branch -d "${new_branch}"
