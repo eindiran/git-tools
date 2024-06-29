@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-author
+#
+#         USAGE: git author [-d <DATE>] [-a <AUTHOR>] [-h]
+#
+#   DESCRIPTION: Show the commits in the log on the current branch by author.
+#
+#      EXAMPLES:
+#          `git author`           -> All commits in log by author=GIT_USER
+#                                    (or user in ~/.gitconfig)
+#          `git author -a AUTHOR` -> All commits for AUTHOR in log
+#          `git author -d DATE`   -> Commits from GIT_USER since DATE.
+#
+#       OPTIONS:
+#           -h          -> Print the help/usage info and exit.
+#           -a <AUTHOR> -> Specify the author to use. Default is GIT_USER env
+#                          variable if it exists, or user.name in ~/.gitconfig if
+#                          not.
+#           -d <DATE>   -> Specify the date that commits in log should be after.
+#                          DATE must be in the ISO-8601/YYYY-MM-DD format.
+#
+#  REQUIREMENTS: git
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+usage() {
+    # Print usage info
+    cat <<EOF
+
+      USAGE: git author [-d <DATE>] [-a <AUTHOR>]
+             git author -h
+
+DESCRIPTION: Show the commits in the log on the current branch by author.
+
+    OPTIONS:
+      -h          -> Print the help/usage info and exit.
+      -a <AUTHOR> -> Specify the author to use. Default is GIT_USER env
+                     variable if it exists, or user.name in ~/.gitconfig if
+                     not.
+      -d <DATE>   -> Specify the date that commits in log should be after.
+                     DATE must be in the ISO-8601/YYYY-MM-DD format.
+                     This can be generated via the '-I' flag to 'date', eg
+                     'date --date="7 days ago" -I'
+
+   EXAMPLES:
+     'git author'           -> All commits in log by author=GIT_USER (or user
+                               in ~/.gitconfig)
+     'git author -a AUTHOR' -> All commits for AUTHOR in log
+     'git author -d DATE'   -> Commits from GIT_USER since DATE.
+EOF
+    exit "${1}"
+}
+
+AUTHOR="${GIT_USER:-}"
+DATE=""
+if [[ -z "${AUTHOR}" ]]; then
+    AUTHOR="$(git config --list | grep "user.name" | awk -F'=' '{ print $2 }')"
+fi
+
+while getopts "d:a:h" option; do
+    case "${option}" in
+        a)
+            AUTHOR=${OPTARG}
+            ;;
+        d)
+            DATE=${OPTARG}
+            ;;
+        h)
+            usage 0
+            ;;
+        *)
+            usage 2
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+if [[ -z "${DATE}" ]]; then
+    git log --author="${AUTHOR}"
+else
+    git log --author="${AUTHOR}" --since="${DATE}"
+fi
