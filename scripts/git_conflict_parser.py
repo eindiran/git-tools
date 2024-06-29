@@ -25,7 +25,10 @@ USE_COLORS: bool = False
 
 
 def _colorize(
-    text: str, fg_color: str | None = None, bg_color: str | None = None, style: str | None = None
+    text: str,
+    fg_color: str | None = None,
+    bg_color: str | None = None,
+    style: str | None = None,
 ) -> None:
     """
     Wrap the print function to optionally print with ANSI
@@ -38,7 +41,7 @@ def _colorize(
 
 
 def _output(  # noqa: PLR0913
-    output_file: IO | None,
+    output_file: IO[str] | None,
     text: str,
     conflicting_files_only: bool = False,
     exit_only: bool = False,
@@ -71,7 +74,7 @@ def conflict_parser(  # noqa: PLR0912
     """
     lines: list[str] = []
     files_with_conflicts: set[str] = set()
-    o: IO | None = None
+    o: IO[str] | None = None
     currently_matching: bool = False
     last_diff_filename: str = ""
     with open(filename, encoding=encoding) as f:
@@ -119,7 +122,7 @@ def conflict_parser(  # noqa: PLR0912
         o.close()
 
 
-def main():
+def main() -> None:
     """
     Arg parser that passes args over to conflict_parser().
     """
@@ -179,7 +182,11 @@ def main():
         global USE_COLORS  # noqa: PLW0603
         USE_COLORS = True
     conflict_parser(
-        args.filename, args.output_file, args.encoding, args.conflicts_only, args.exit_only
+        args.filename,
+        args.output_file,
+        args.encoding,
+        args.conflicts_only,
+        args.exit_only,
     )
     sys.exit(EXIT_CODE_NO_CONFLICT)
 
