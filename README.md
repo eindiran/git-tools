@@ -34,11 +34,15 @@ Enables `git recentco`; get recent branches by last commit time.
 
 Tools for switching to recent branches. `popb` for last branch, `switchb` for an interactive menu.
 
+## Misc
+
+#### `git-author`
+
+Search the log on the current branch for commits by a specific author.
+
 #### `git-cleanb`
 
 Tool to interactively delete branches.
-
-## Misc
 
 #### `git-jnb`
 
