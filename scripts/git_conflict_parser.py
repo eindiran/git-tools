@@ -5,6 +5,7 @@ git_conflict_parser.py
 Read in a diff from a merge-tree, and show the conflicts
 split up by file.
 """
+
 import argparse
 import re
 import sys
