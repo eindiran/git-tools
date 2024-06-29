@@ -82,5 +82,13 @@ shift $((OPTIND - 1))
 if [[ -z "${DATE}" ]]; then
     git log --author="${AUTHOR}"
 else
-    git log --author="${AUTHOR}" --since="${DATE}"
+    # Validate the date:
+    if [[ ${DATE} =~ ^([0-9]{4}[-/])?[0-9]{1,2}[-/][0-9]{1,2}$ ]] && date -d "${DATE}" >/dev/null 2>&1; then
+        # Note that it doesn't actually need to be ISO-8601, several date formats are
+        # supported by git, but suggesting ISO-8601 is a safer bet.
+        git log --author="${AUTHOR}" --since="${DATE}"
+    else
+        echo "Invalid date format for date ${DATE}"
+        exit 1
+    fi
 fi
