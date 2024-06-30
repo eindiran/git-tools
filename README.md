@@ -51,3 +51,7 @@ Enables `git jnb`; auto-format a new branch name based on a short text descripti
 #### `git-diffago`
 
 Enables `git diffago`; compare working tree with commit N commits ago (from `HEAD`). Eg `git diffago 3` = `git diff HEAD~3` and `git diffago 3 HEAD` = `git diffago HEAD~3 HEAD`.
+
+#### `git-tree`
+
+Enables showing files using the `tree` command; requires `tree` to be installed.
