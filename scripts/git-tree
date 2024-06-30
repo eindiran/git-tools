@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-tree
+#
+#         USAGE: git tree
+#
+#   DESCRIPTION: Display files in the repository using `tree`.
+#
+#      EXAMPLES: `git tree` -> Show all files in the tree using `tree`
+#
+#  REQUIREMENTS: git, tree
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+# Use -a for hidden files and -C for color:
+git ls-tree -r --name-only HEAD | tree --fromfile -a -C
