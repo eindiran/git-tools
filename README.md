@@ -55,3 +55,7 @@ Enables `git diffago`; compare working tree with commit N commits ago (from `HEA
 #### `git-tree`
 
 Enables showing files using the `tree` command; requires `tree` to be installed.
+
+#### `git-ignored`
+
+List all files ignored by the patterns in active `.gitignore` files.
