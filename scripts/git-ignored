@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-ignored
+#
+#         USAGE: git ignored
+#
+#   DESCRIPTION: List all files currently captured by .gitignore patterns in
+#                presently use.
+#
+#                Examples:
+#                   `git ignored`  -> List all files captured by .gitignore
+#                                     patterns
+#
+#  REQUIREMENTS: git
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+# shellcheck disable=SC2068,SC2086
+git -C . ls-files --exclude-standard -oi --directory
