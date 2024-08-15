@@ -4,13 +4,13 @@ Scripts for git, enabling some of my common workflows.
 
 ## Merge conflicts
 
-### `git-conflicts`
+#### `git-conflicts`
 
 Enables `git conflicts`; check the conflicts that will occur when merging two specified branches.
 
 Uses `git_conflict_parser.py` under the hood.
 
-### `git-mergedit`
+#### `git-mergedit`
 
 Enables `git mergedit`; does a merge and then opens all files with conflicts in `$EDITOR`.
 
