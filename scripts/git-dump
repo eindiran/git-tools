@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#===============================================================================
+#
+#          FILE: git-dump
+#
+#         USAGE: git dump
+#
+#   DESCRIPTION: Alias for git stash clear
+#                Examples:
+#                   `git dump`  --> Clear stash entirely
+#
+#  REQUIREMENTS: git
+#
+#        AUTHOR: Elliott Indiran <elliott.indiran@protonmail.com>
+#===============================================================================
+set -Eeuo pipefail
+
+git stash clear
