@@ -23,4 +23,4 @@ GIT_JNB_INITIALS="ei"
 # Get the branch name string
 BRANCH_NAME_STR="$(printf "_%s" "$@")"
 
-git checkout -b "${GIT_JNB_INITIALS}_$(gdate +%Y%m%d)${BRANCH_NAME_STR}"
+git checkout -b "$(gdate +%Y%m%d)_${GIT_JNB_INITIALS}${BRANCH_NAME_STR}"
